@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Cipher Tool</title>
+    <script src="./config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -179,12 +180,13 @@
 </div>
 
 <script>
-    // Auto-detect backend URL based on environment
-    // For local development: http://localhost:8080
-    // For production: use VITE_API_URL env var or deployed backend
-    const API_BASE = window.location.hostname === 'localhost'
-        ? 'http://localhost:8080'
-        : 'https://custom-cipher-tool-backend.railway.app';
+    // Backend URL from environment or default to localhost
+    const API_BASE = window.BACKEND_URL || (
+        window.location.hostname === 'localhost'
+            ? 'http://localhost:8080'
+            : 'https://api.example.com'
+    );
+    console.log('API_BASE:', API_BASE);
 
     const inputText  = document.getElementById('inputText');
     const secretKey  = document.getElementById('secretKey');
