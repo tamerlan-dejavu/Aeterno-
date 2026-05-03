@@ -56,25 +56,29 @@ The frontend talks to `http://localhost:8080` by default. To point it at a deplo
 ## Deployment
 
 ### Frontend &mdash; Vercel
-1. Push the project to GitHub.
-2. In Vercel, import the repo and set the **root directory** to `frontend/`.
-3. Vercel auto-detects `vercel.json` and deploys the static site.
+1. Go to https://vercel.com/dashboard
+2. **Add New** → **Project**
+3. Import `tamerlan-dejavu/Aeterno-` repo
+4. In **Root Directory**, select `custom-cipher-tool/frontend`
+5. Leave Build Command and Output Directory empty
+6. Click **Deploy**
+7. Wait for completion → you get a public URL like `https://aeterno.vercel.app`
 
-### Backend &mdash; Render / Railway (free tiers)
+### Backend &mdash; Railway (recommended)
+1. Go to https://railway.app
+2. **New Project** → **Deploy from GitHub Repo**
+3. Select `tamerlan-dejavu/Aeterno-`
+4. **Root Directory:** `custom-cipher-tool/backend`
+5. Railway auto-detects Maven + builds via Docker
+6. Wait ~5 minutes for deployment
+7. Click the **Railway deployment** link to get your backend URL (e.g., `https://custom-cipher-tool-backend.railway.app`)
+8. Update `frontend/index.html` line 183-185 with your actual backend URL:
+   ```javascript
+   const API_BASE = 'https://your-railway-backend-url';
+   ```
+9. Commit & push → Vercel auto-rebuilds
 
-**Render:**
-1. Create a new **Web Service**, point it at the repo.
-2. Root directory: `backend`.
-3. Build command: `mvn clean package -DskipTests`.
-4. Start command: `java -jar target/custom-cipher-tool-1.0.0.jar`.
-5. Environment: Java 17.
-6. Once deployed, copy the public URL into `API_BASE` in the frontend.
-
-**Railway:**
-1. New project &rarr; Deploy from GitHub.
-2. Set **Root Directory** to `backend/`.
-3. Railway detects Maven and builds automatically.
-4. Expose port 8080.
+**Quick alternative:** Backend URL auto-detects based on hostname. If you name your Railway service `custom-cipher-tool-backend`, the frontend will find it automatically.
 
 ## Algorithm summary
 

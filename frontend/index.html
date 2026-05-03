@@ -179,8 +179,12 @@
 </div>
 
 <script>
-    // TODO: replace with your deployed backend URL
-    const API_BASE = 'http://localhost:8080';
+    // Auto-detect backend URL based on environment
+    // For local development: http://localhost:8080
+    // For production: use VITE_API_URL env var or deployed backend
+    const API_BASE = window.location.hostname === 'localhost'
+        ? 'http://localhost:8080'
+        : 'https://custom-cipher-tool-backend.railway.app';
 
     const inputText  = document.getElementById('inputText');
     const secretKey  = document.getElementById('secretKey');
