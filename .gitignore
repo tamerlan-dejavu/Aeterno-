@@ -1,0 +1,9 @@
+target/
+*.class
+.classpath
+.project
+.settings/
+*.jar
+*.log
+node_modules/
+.DS_Store
