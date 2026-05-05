@@ -3,183 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Cipher Tool</title>
+    <title>Tensor-Cube Cipher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'JetBrains Mono', monospace;
-            background: #0f172a;
+            background: #08090f;
             background-image:
-                radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.08) 0%, transparent 40%);
+                radial-gradient(ellipse at 15% 10%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 85%, rgba(59, 130, 246, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 70%);
             min-height: 100vh;
         }
+
+        /* grid bg */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(139,92,246,.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,92,246,.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .z1 { position: relative; z-index: 1; }
+
+        /* title */
         .neon-title {
-            color: #67e8f9;
-            text-shadow:
-                0 0 5px #22d3ee,
-                0 0 10px #22d3ee,
-                0 0 20px #22d3ee,
-                0 0 40px #0891b2;
+            background: linear-gradient(135deg, #a78bfa 0%, #818cf8 40%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 18px rgba(139,92,246,.55));
         }
-        .neon-border {
-            border: 1px solid rgba(34, 211, 238, 0.3);
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.1) inset;
+        .subtitle-accent { color: #818cf8; }
+
+        /* badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(139,92,246,.12);
+            border: 1px solid rgba(139,92,246,.35);
+            border-radius: 999px;
+            padding: 3px 12px;
+            font-size: 11px;
+            color: #a78bfa;
+            letter-spacing: .04em;
         }
+        .badge-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #a78bfa;
+            box-shadow: 0 0 6px #a78bfa;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100% { opacity: 1; } 50% { opacity: .3; }
+        }
+
+        /* algo steps */
+        .algo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .algo-step {
+            background: rgba(30, 27, 75, 0.5);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 10px;
+            padding: 12px 10px;
+            text-align: center;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .algo-step:hover {
+            border-color: rgba(139,92,246,.6);
+            box-shadow: 0 0 14px rgba(139,92,246,.2);
+        }
+        .algo-step .step-num {
+            font-size: 10px;
+            color: #6366f1;
+            margin-bottom: 4px;
+            letter-spacing: .08em;
+        }
+        .algo-step .step-icon { font-size: 20px; margin-bottom: 4px; }
+        .algo-step .step-label { font-size: 11px; color: #c4b5fd; line-height: 1.3; }
+
+        /* cube visual */
+        .cube-visual {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3px;
+            width: 96px;
+        }
+        .cube-cell {
+            width: 20px; height: 20px;
+            border-radius: 3px;
+            background: rgba(99,102,241,.18);
+            border: 1px solid rgba(99,102,241,.3);
+            transition: background .3s, border-color .3s;
+        }
+        .cube-cell.active {
+            background: rgba(139,92,246,.6);
+            border-color: #a78bfa;
+            box-shadow: 0 0 6px rgba(139,92,246,.6);
+        }
+
+        /* card */
+        .card {
+            background: rgba(15, 14, 35, 0.7);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 14px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 0 30px rgba(99,102,241,.05);
+        }
+
+        /* inputs */
         .neon-input {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(34, 211, 238, 0.4);
-            color: #e0f2fe;
+            background: rgba(8, 9, 20, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #e0e7ff;
             transition: all 0.2s ease;
         }
         .neon-input:focus {
             outline: none;
-            border-color: #22d3ee;
-            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3), 0 0 15px rgba(34, 211, 238, 0.4);
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(99,102,241,.25), 0 0 18px rgba(99,102,241,.2);
         }
+        .neon-input::placeholder { color: #4b5563; }
+
+        /* buttons */
         .btn-neon {
-            transition: all 0.25s ease;
-            position: relative;
+            transition: all 0.2s ease;
             font-weight: 600;
+            letter-spacing: .02em;
         }
-        .btn-cyan {
-            background: linear-gradient(135deg, #0e7490, #06b6d4);
-            color: #ecfeff;
-            border: 1px solid #22d3ee;
+        .btn-violet {
+            background: linear-gradient(135deg, #4c1d95, #7c3aed);
+            color: #ede9fe;
+            border: 1px solid #7c3aed;
         }
-        .btn-cyan:hover:not(:disabled) {
-            box-shadow: 0 0 10px #22d3ee, 0 0 25px #22d3ee, 0 0 40px rgba(34, 211, 238, 0.5);
+        .btn-violet:hover:not(:disabled) {
+            box-shadow: 0 0 10px #7c3aed, 0 0 30px rgba(124,58,237,.45);
             transform: translateY(-1px);
         }
-        .btn-green {
-            background: linear-gradient(135deg, #15803d, #22c55e);
-            color: #f0fdf4;
-            border: 1px solid #4ade80;
+        .btn-blue {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: #eff6ff;
+            border: 1px solid #3b82f6;
         }
-        .btn-green:hover:not(:disabled) {
-            box-shadow: 0 0 10px #4ade80, 0 0 25px #4ade80, 0 0 40px rgba(74, 222, 128, 0.5);
+        .btn-blue:hover:not(:disabled) {
+            box-shadow: 0 0 10px #3b82f6, 0 0 30px rgba(59,130,246,.45);
             transform: translateY(-1px);
         }
-        .btn-slate {
-            background: rgba(30, 41, 59, 0.8);
-            color: #cbd5e1;
-            border: 1px solid rgba(100, 116, 139, 0.5);
+        .btn-ghost {
+            background: rgba(30, 27, 75, 0.6);
+            color: #a5b4fc;
+            border: 1px solid rgba(99,102,241,.3);
         }
-        .btn-slate:hover:not(:disabled) {
-            border-color: #22d3ee;
-            color: #67e8f9;
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+        .btn-ghost:hover:not(:disabled) {
+            border-color: #818cf8;
+            color: #c4b5fd;
+            box-shadow: 0 0 12px rgba(99,102,241,.3);
         }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+
         .spinner {
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
+            width: 13px; height: 13px;
+            border: 2px solid rgba(255,255,255,.25);
             border-top-color: #fff;
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: spin .7s linear infinite;
             vertical-align: middle;
             margin-right: 6px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .status-success {
-            color: #4ade80;
-            text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
-        }
-        .status-error {
-            color: #f87171;
-            text-shadow: 0 0 8px rgba(248, 113, 113, 0.6);
-        }
+
+        .status-success { color: #86efac; text-shadow: 0 0 8px rgba(134,239,172,.5); }
+        .status-error   { color: #fca5a5; text-shadow: 0 0 8px rgba(252,165,165,.5); }
+
         textarea, input { font-family: 'JetBrains Mono', monospace; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+        ::-webkit-scrollbar-track { background: #08090f; }
+        ::-webkit-scrollbar-thumb { background: #312e81; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
+
+        label { user-select: none; }
+
+        @media (max-width: 600px) {
+            .algo-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body class="text-slate-200">
 
-<div class="max-w-5xl mx-auto p-6">
+<div class="max-w-3xl mx-auto px-4 py-8 z1">
 
-    <header class="text-center mb-8 mt-4">
-        <h1 class="neon-title text-4xl md:text-5xl font-extrabold tracking-wider">
-            Custom Cipher Tool
+    <!-- Header -->
+    <header class="text-center mb-8">
+        <div class="flex justify-center mb-3">
+            <span class="badge"><span class="badge-dot"></span>v2.0 &mdash; Tensor-Cube Engine</span>
+        </div>
+        <h1 class="neon-title text-4xl md:text-5xl font-extrabold tracking-tight mb-2">
+            Tensor-Cube Cipher
         </h1>
-        <p class="text-slate-400 mt-2 text-sm">XOR + Circular Bit Shift &middot; symmetric encryption</p>
+        <p class="text-slate-400 text-sm">
+            <span class="subtitle-accent">4×4×4 tensor blocks</span>
+            &nbsp;&middot;&nbsp; SHA-256 key derivation
+            &nbsp;&middot;&nbsp; layer shifting + XOR mask
+        </p>
     </header>
 
-    <main class="bg-slate-900/50 backdrop-blur rounded-xl neon-border p-6 space-y-5">
+    <!-- Algorithm overview -->
+    <div class="card p-5 mb-5">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="cube-visual" id="cubeVisual">
+                <!-- 16 cells, JS will animate -->
+            </div>
+            <div>
+                <p class="text-xs text-indigo-300 font-semibold mb-1 uppercase tracking-widest">How it works</p>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Each 64-byte block is loaded into a <span class="text-indigo-300">4×4×4 tensor</span>.
+                    Planes are circularly shifted along X, Y, Z axes, then every cell is XOR-ed
+                    with a <span class="text-indigo-300">key-derived 64-byte mask</span>.
+                </p>
+            </div>
+        </div>
+        <div class="algo-grid">
+            <div class="algo-step">
+                <div class="step-num">STEP 0</div>
+                <div class="step-icon">📦</div>
+                <div class="step-label">PKCS#7 pad &amp; split into 64-byte blocks</div>
+            </div>
+            <div class="algo-step">
+                <div class="step-num">STEP 1</div>
+                <div class="step-icon">🔑</div>
+                <div class="step-label">SHA-256 key → shifts + PRNG XOR mask</div>
+            </div>
+            <div class="algo-step">
+                <div class="step-num">STEP 2</div>
+                <div class="step-icon">🔄</div>
+                <div class="step-label">Circular shift X→Y→Z planes</div>
+            </div>
+            <div class="algo-step">
+                <div class="step-num">STEP 3</div>
+                <div class="step-icon">⚡</div>
+                <div class="step-label">XOR every cell with 64-byte mask</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="card p-6 space-y-5">
 
         <div>
-            <label for="inputText" class="block text-cyan-300 mb-2 text-sm font-semibold">
-                Input Text
+            <label for="inputText" class="block text-indigo-300 mb-2 text-sm font-semibold">
+                Input
             </label>
             <textarea id="inputText" rows="6"
-                      placeholder="Enter plaintext to encrypt or paste Base64 ciphertext to decrypt..."
-                      class="neon-input w-full p-3 rounded-lg resize-vertical"></textarea>
-            <div class="text-right text-xs text-slate-500 mt-1">
-                <span id="charCount">0</span> characters
+                      placeholder="Plaintext to encrypt — or Base64 ciphertext to decrypt..."
+                      class="neon-input w-full p-3 rounded-lg resize-vertical text-sm"></textarea>
+            <div class="text-right text-xs text-slate-600 mt-1">
+                <span id="charCount">0</span> chars
             </div>
         </div>
 
         <div>
-            <label for="secretKey" class="block text-cyan-300 mb-2 text-sm font-semibold">
+            <label for="secretKey" class="block text-indigo-300 mb-2 text-sm font-semibold">
                 Secret Key
             </label>
             <input id="secretKey" type="text"
-                   placeholder="Enter your secret key (any UTF-8 string)"
-                   class="neon-input w-full p-3 rounded-lg">
+                   placeholder="Any UTF-8 string — hashed via SHA-256 internally"
+                   class="neon-input w-full p-3 rounded-lg text-sm">
         </div>
 
         <div class="flex flex-wrap gap-3">
-            <button id="encryptBtn" class="btn-neon btn-cyan px-5 py-2.5 rounded-lg flex-1 min-w-[140px]">
+            <button id="encryptBtn" class="btn-neon btn-violet px-5 py-2.5 rounded-lg flex-1 min-w-[140px] text-sm">
                 🔒 Encrypt
             </button>
-            <button id="decryptBtn" class="btn-neon btn-green px-5 py-2.5 rounded-lg flex-1 min-w-[140px]">
+            <button id="decryptBtn" class="btn-neon btn-blue px-5 py-2.5 rounded-lg flex-1 min-w-[140px] text-sm">
                 🔓 Decrypt
             </button>
         </div>
 
         <div class="flex flex-wrap gap-3">
-            <label class="btn-neon btn-slate px-4 py-2 rounded-lg cursor-pointer text-sm flex-1 min-w-[140px] text-center">
+            <label class="btn-neon btn-ghost px-4 py-2 rounded-lg cursor-pointer text-xs flex-1 min-w-[120px] text-center">
                 ⬆ Load File
                 <input type="file" id="fileInput" accept=".txt" class="hidden">
             </label>
-            <button id="saveBtn" class="btn-neon btn-slate px-4 py-2 rounded-lg text-sm flex-1 min-w-[140px]">
+            <button id="saveBtn" class="btn-neon btn-ghost px-4 py-2 rounded-lg text-xs flex-1 min-w-[120px]">
                 ⬇ Save Output
             </button>
-            <button id="copyBtn" class="btn-neon btn-slate px-4 py-2 rounded-lg text-sm flex-1 min-w-[140px]">
-                📋 Copy to Clipboard
+            <button id="copyBtn" class="btn-neon btn-ghost px-4 py-2 rounded-lg text-xs flex-1 min-w-[120px]">
+                📋 Copy
             </button>
         </div>
 
         <div>
-            <label for="outputText" class="block text-cyan-300 mb-2 text-sm font-semibold">
+            <label for="outputText" class="block text-indigo-300 mb-2 text-sm font-semibold">
                 Output
             </label>
             <textarea id="outputText" rows="6" readonly
                       placeholder="Result will appear here..."
-                      class="neon-input w-full p-3 rounded-lg resize-vertical"></textarea>
+                      class="neon-input w-full p-3 rounded-lg resize-vertical text-sm opacity-80"></textarea>
         </div>
 
-        <div id="statusBar" class="text-center text-sm py-2 px-4 rounded-lg bg-slate-800/50 border border-slate-700">
-            <span class="text-slate-500">Ready.</span>
+        <div id="statusBar" class="text-center text-xs py-2 px-4 rounded-lg bg-slate-900/60 border border-slate-800">
+            <span class="text-slate-600">Ready.</span>
         </div>
 
-    </main>
+    </div>
 
-    <footer class="text-center text-slate-600 text-xs mt-6">
-        Custom XOR-Shift Cipher &middot; educational use only
+    <footer class="text-center text-slate-700 text-xs mt-6">
+        Tensor-Cube Cipher &middot; educational use only &middot; v2.0
     </footer>
+
 </div>
 
 <script>
-    // Backend URL - update this with your deployed backend URL
     const API_BASE = 'https://custom-cipher-backend.onrender.com';
 
     const inputText  = document.getElementById('inputText');
@@ -187,49 +333,64 @@
     const outputText = document.getElementById('outputText');
     const charCount  = document.getElementById('charCount');
     const statusBar  = document.getElementById('statusBar');
-
     const encryptBtn = document.getElementById('encryptBtn');
     const decryptBtn = document.getElementById('decryptBtn');
     const copyBtn    = document.getElementById('copyBtn');
     const saveBtn    = document.getElementById('saveBtn');
     const fileInput  = document.getElementById('fileInput');
 
+    // ── cube animation ───────────────────────────────────────────────────
+    const cubeVisual = document.getElementById('cubeVisual');
+    for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cube-cell';
+        cubeVisual.appendChild(cell);
+    }
+    const cubeCells = cubeVisual.querySelectorAll('.cube-cell');
+    let cubeInterval = setInterval(() => {
+        cubeCells.forEach(c => c.classList.remove('active'));
+        const n = Math.floor(Math.random() * 5) + 2;
+        const chosen = new Set();
+        while (chosen.size < n) chosen.add(Math.floor(Math.random() * 16));
+        chosen.forEach(i => cubeCells[i].classList.add('active'));
+    }, 900);
+
+    // ── char count ───────────────────────────────────────────────────────
     inputText.addEventListener('input', () => {
         charCount.textContent = inputText.value.length;
     });
 
+    // ── status ───────────────────────────────────────────────────────────
     function setStatus(message, ok) {
         statusBar.innerHTML = '';
         const span = document.createElement('span');
         span.textContent = message;
         span.className = ok ? 'status-success' : 'status-error';
         statusBar.appendChild(span);
-        statusBar.className = 'text-center text-sm py-2 px-4 rounded-lg ' +
-            (ok ? 'bg-green-900/20 border border-green-700/50'
-                : 'bg-red-900/20 border border-red-700/50');
+        statusBar.className = 'text-center text-xs py-2 px-4 rounded-lg ' +
+            (ok ? 'bg-green-950/40 border border-green-800/40'
+                : 'bg-red-950/40 border border-red-800/40');
     }
 
-    function setLoading(btn, loading, originalText) {
+    function setLoading(btn, loading) {
         if (loading) {
             btn.dataset.original = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span>Working...';
         } else {
             btn.disabled = false;
-            btn.innerHTML = btn.dataset.original || originalText;
+            btn.innerHTML = btn.dataset.original || '';
         }
         encryptBtn.disabled = loading;
         decryptBtn.disabled = loading;
     }
 
+    // ── API call ─────────────────────────────────────────────────────────
     async function callApi(endpoint, btn) {
         const text = inputText.value;
         const key  = secretKey.value;
 
-        if (!key) {
-            setStatus('Secret key is required.', false);
-            return;
-        }
+        if (!key) { setStatus('Secret key is required.', false); return; }
 
         setLoading(btn, true);
         try {
@@ -241,7 +402,7 @@
             const data = await res.json();
             if (data.success) {
                 outputText.value = data.result;
-                setStatus(data.message || 'Success', true);
+                setStatus(data.message || 'Done.', true);
             } else {
                 outputText.value = '';
                 setStatus(data.message || 'Operation failed.', false);
@@ -257,38 +418,32 @@
     encryptBtn.addEventListener('click', () => callApi('encrypt', encryptBtn));
     decryptBtn.addEventListener('click', () => callApi('decrypt', decryptBtn));
 
+    // ── copy ─────────────────────────────────────────────────────────────
     copyBtn.addEventListener('click', async () => {
-        if (!outputText.value) {
-            setStatus('Nothing to copy.', false);
-            return;
-        }
+        if (!outputText.value) { setStatus('Nothing to copy.', false); return; }
         try {
             await navigator.clipboard.writeText(outputText.value);
             setStatus('Copied to clipboard.', true);
-        } catch (e) {
+        } catch {
             outputText.select();
             document.execCommand('copy');
-            setStatus('Copied (fallback).', true);
+            setStatus('Copied.', true);
         }
     });
 
+    // ── save ─────────────────────────────────────────────────────────────
     saveBtn.addEventListener('click', () => {
-        if (!outputText.value) {
-            setStatus('Nothing to save.', false);
-            return;
-        }
+        if (!outputText.value) { setStatus('Nothing to save.', false); return; }
         const blob = new Blob([outputText.value], { type: 'text/plain;charset=utf-8' });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
-        a.href = url;
-        a.download = 'cipher-output.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = 'tensor-cipher-output.txt';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
         setStatus('Output saved.', true);
     });
 
+    // ── file load ────────────────────────────────────────────────────────
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -296,7 +451,7 @@
         reader.onload = (ev) => {
             inputText.value = ev.target.result;
             charCount.textContent = inputText.value.length;
-            setStatus(`Loaded ${file.name}`, true);
+            setStatus(`Loaded: ${file.name}`, true);
         };
         reader.onerror = () => setStatus('Failed to read file.', false);
         reader.readAsText(file);
