@@ -113,6 +113,68 @@
             box-shadow: 0 0 6px rgba(139,92,246,.6);
         }
 
+        /* 3D tensor visualization */
+        .tensor-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .tensor-layer {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(99,102,241,.08);
+            border: 2px solid rgba(99,102,241,.3);
+            position: relative;
+            transition: all .3s ease;
+        }
+        .tensor-layer:hover {
+            border-color: rgba(139,92,246,.6);
+            background: rgba(99,102,241,.12);
+            box-shadow: 0 0 20px rgba(139,92,246,.3);
+        }
+        .tensor-layer-label {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: #818cf8;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .tensor-cell {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            background: rgba(139,92,246,.15);
+            border: 1px solid rgba(139,92,246,.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #a78bfa;
+            transition: all .2s ease;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tensor-cell:hover {
+            background: rgba(139,92,246,.4);
+            border-color: #a78bfa;
+            box-shadow: 0 0 8px rgba(139,92,246,.5);
+            transform: scale(1.05);
+        }
+        .tensor-cell.highlight {
+            background: rgba(139,92,246,.7);
+            border-color: #a78bfa;
+            box-shadow: 0 0 12px rgba(139,92,246,.8);
+        }
+
         /* card */
         .card {
             background: rgba(15, 14, 35, 0.7);
@@ -234,6 +296,15 @@
                 </p>
             </div>
         </div>
+
+        <!-- 3D Tensor Visualization -->
+        <div class="mb-6">
+            <p class="text-xs text-indigo-300 font-semibold mb-3 uppercase tracking-widest">4×4×4 Tensor Structure (4 XY-Planes)</p>
+            <div class="tensor-container" id="tensorContainer">
+                <!-- Z=0, Z=1, Z=2, Z=3 layers -->
+            </div>
+        </div>
+
         <div class="algo-grid">
             <div class="algo-step">
                 <div class="step-num">STEP 0</div>
@@ -354,6 +425,79 @@
         while (chosen.size < n) chosen.add(Math.floor(Math.random() * 16));
         chosen.forEach(i => cubeCells[i].classList.add('active'));
     }, 900);
+
+    // ── 3D tensor visualization ────────────────────────────────────────────
+    const tensorContainer = document.getElementById('tensorContainer');
+    const tensorState = []; // track all 64 cells for animation
+
+    function initTensorVisualization() {
+        tensorContainer.innerHTML = '';
+        const axisLabels = ['X', 'Y', 'Z'];
+
+        // Create 4 layers (Z = 0, 1, 2, 3)
+        for (let z = 0; z < 4; z++) {
+            const layer = document.createElement('div');
+            layer.className = 'tensor-layer';
+
+            // Layer label
+            const label = document.createElement('div');
+            label.className = 'tensor-layer-label';
+            label.textContent = `Z=${z} (XY-Plane)`;
+            layer.appendChild(label);
+
+            // Create 4x4 grid for this Z-plane
+            for (let x = 0; x < 4; x++) {
+                for (let y = 0; y < 4; y++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'tensor-cell';
+                    const index = x * 16 + y * 4 + z;
+                    const value = Math.floor(Math.random() * 256);
+                    cell.textContent = value.toString(16).padStart(2, '0').toUpperCase();
+                    cell.dataset.index = index;
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.dataset.z = z;
+
+                    tensorState[index] = { cell, value };
+
+                    cell.addEventListener('mouseenter', () => {
+                        // Highlight entire plane
+                        document.querySelectorAll('.tensor-cell').forEach(c => {
+                            if (c.dataset.z == z) {
+                                c.classList.add('highlight');
+                            }
+                        });
+                    });
+                    cell.addEventListener('mouseleave', () => {
+                        document.querySelectorAll('.tensor-cell').forEach(c => {
+                            c.classList.remove('highlight');
+                        });
+                    });
+
+                    layer.appendChild(cell);
+                }
+            }
+            tensorContainer.appendChild(layer);
+        }
+    }
+
+    initTensorVisualization();
+
+    // Animate tensor cells periodically
+    let tensorAnimInterval = setInterval(() => {
+        const randomIndices = new Set();
+        while (randomIndices.size < 12) {
+            randomIndices.add(Math.floor(Math.random() * 64));
+        }
+        randomIndices.forEach(idx => {
+            if (tensorState[idx]) {
+                tensorState[idx].cell.classList.add('highlight');
+                setTimeout(() => {
+                    tensorState[idx].cell.classList.remove('highlight');
+                }, 500);
+            }
+        });
+    }, 1200);
 
     // ── char count ───────────────────────────────────────────────────────
     inputText.addEventListener('input', () => {
