@@ -1,7 +1,6 @@
 package com.cipher.algorithm;
 
 import org.springframework.stereotype.Component;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -9,21 +8,20 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
-/**
- * Tensor-Cube Cipher — symmetric block cipher on a 4×4×4 byte tensor.
- *
- * Encryption per 64-byte block:
- *   1. Load into tensor[x][y][z], row-major: index = x*16 + y*4 + z
- *   2. Circular-shift X-planes, then Y-planes, then Z-planes
- *   3. XOR every cell with the 64-byte key-derived mask
- *
- * Decryption reverses steps: XOR (self-inverse), then Z/Y/X with negative shifts.
- */
-@Component
 public class CustomCipher {
-
     private static final int BLOCK = 64;
-    private static final int DIM   = 4;
+    private static final int DIM = 4;
+
+    private void validateKey(String key) {
+        if (key == null || key.isEmpty())
+            throw new IllegalArgumentException("Key must not be empty");
+    }
+    private static final class KeyMaterial {
+        final int[] shiftX = new int[DIM];  
+        final int[] shiftY = new int[DIM];  
+        final int[] shiftZ = new int[DIM];   
+        final byte[] mask = new byte[BLOCK];
+    }
 
     // ── public API ──────────────────────────────────────────────────────────
 
@@ -78,12 +76,7 @@ public class CustomCipher {
 
     // ── key derivation ───────────────────────────────────────────────────────
 
-    private static final class KeyMaterial {
-        final int[]  shiftX = new int[DIM];   // per x-layer shift
-        final int[]  shiftY = new int[DIM];   // per y-layer shift
-        final int[]  shiftZ = new int[DIM];   // per z-layer shift
-        final byte[] mask   = new byte[BLOCK];
-    }
+    
 
     private KeyMaterial deriveKey(String key) {
         byte[] hash = sha256(key.getBytes(StandardCharsets.UTF_8));
@@ -225,10 +218,7 @@ public class CustomCipher {
 
     // ── utilities ────────────────────────────────────────────────────────────
 
-    private void validateKey(String key) {
-        if (key == null || key.isEmpty())
-            throw new IllegalArgumentException("Key must not be empty");
-    }
+    
 
     private byte[] sha256(byte[] input) {
         try {
