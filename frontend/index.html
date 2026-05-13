@@ -574,11 +574,10 @@
         <div style="margin-bottom:1.25rem;">
             <label for="inputText" class="form-label">Input Text</label>
             <textarea id="inputText" rows="4"
-                      placeholder="Enter plaintext (max 60 chars). Click 'Show Demo' to visualize."
-                      class="form-input"
-                      maxlength="60"></textarea>
+                      placeholder="Enter plaintext to encrypt or Base64 ciphertext to decrypt..."
+                      class="form-input"></textarea>
             <div style="text-align:right;font-size:8.5px;color:var(--text-subtle);margin-top:0.3rem;letter-spacing:0.06em;">
-                <span id="charCount">0</span> / 60 chars
+                <span id="charCount">0</span> characters
             </div>
         </div>
 
@@ -618,7 +617,7 @@
     </div>
 
     <footer class="site-footer">
-        Tensor-Cube Cipher &middot; Educational Use Only &middot; v2.2
+        Bauyrzhan Tamerlan &middot; Derevyanchenko Kirill
     </footer>
 
 </div>
@@ -882,9 +881,9 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
-            inputText.value = ev.target.result.substring(0, 60);
+            inputText.value = ev.target.result;
             charCount.textContent = inputText.value.length;
-            setStatus(`Loaded: ${file.name} (truncated to 60 chars)`, true);
+            setStatus(`Loaded: ${file.name}`, true);
         };
         reader.onerror = () => setStatus('Failed to read file.', false);
         reader.readAsText(file);
