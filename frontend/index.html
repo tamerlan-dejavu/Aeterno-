@@ -36,14 +36,14 @@
         .page-wrapper {
             max-width: 760px;
             margin: 0 auto;
-            padding: 4.5rem 1.5rem 7rem;
+            padding: 2rem 1.5rem 7rem;
         }
 
         /* ── Site Header ───────────────────────────────────────────────── */
         .site-header {
             text-align: center;
-            margin-bottom: 3rem;
-            padding-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--border);
         }
 
@@ -538,159 +538,10 @@
     const statusBar  = document.getElementById('statusBar');
     const encryptBtn = document.getElementById('encryptBtn');
     const decryptBtn = document.getElementById('decryptBtn');
-    const demoBtn    = document.getElementById('demoBtn');
     const copyBtn    = document.getElementById('copyBtn');
     const saveBtn    = document.getElementById('saveBtn');
     const fileInput  = document.getElementById('fileInput');
 
-    // ── Demo Data ───────────────────────────────────────────────────────
-    let demoData = {
-        plaintext: null,
-        tensor0: null,
-        tensor2: null,
-        tensor3: null,
-        shiftValues: null,
-        base64Output: null
-    };
-
-    // ── Utility: Generate sample tensor with plaintext ──────────────────
-    function generateTensorFromText(text, key) {
-        // Pad to 64 bytes
-        let bytes = new TextEncoder().encode(text);
-        let padLen = 64 - (bytes.length % 64);
-        let padded = new Uint8Array(bytes.length + padLen);
-        padded.set(bytes);
-        for (let i = bytes.length; i < padded.length; i++) {
-            padded[i] = padLen;
-        }
-
-        // Take first 64 bytes
-        let block = padded.slice(0, 64);
-
-        // Hash key for shifts
-        let keyBytes = new TextEncoder().encode(key);
-        return {
-            bytes: Array.from(block),
-            padLen: padLen
-        };
-    }
-
-    // ── Utility: Render tensor visualization ────────────────────────────
-    function renderTensor(containerId, tensorBytes, colorClass = '', shiftInfo = null) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
-
-        for (let layer = 0; layer < 4; layer++) {
-            const layerDiv = document.createElement('div');
-            layerDiv.className = 'tensor-layer';
-
-            const label = document.createElement('div');
-            label.className = 'tensor-layer-label';
-            label.textContent = `Layer ${layer}`;
-            layerDiv.appendChild(label);
-
-            for (let row = 0; row < 4; row++) {
-                for (let col = 0; col < 4; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'tensor-cell';
-                    const index = layer * 16 + row * 4 + col;
-                    const value = tensorBytes[index];
-
-                    // Display hex value or character
-                    if (value >= 32 && value <= 126) {
-                        cell.textContent = String.fromCharCode(value);
-                    } else {
-                        cell.textContent = value.toString(16).padStart(2, '0').toUpperCase();
-                    }
-
-                    if (colorClass) {
-                        cell.classList.add(colorClass);
-                    }
-
-                    cell.title = `[${layer},${row},${col}] idx=${index} val=${value}`;
-
-                    layerDiv.appendChild(cell);
-                }
-            }
-
-            container.appendChild(layerDiv);
-        }
-    }
-
-    // ── Demo Initialization ─────────────────────────────────────────────
-    demoBtn.addEventListener('click', async () => {
-        const text = inputText.value.trim();
-        const key = secretKey.value.trim();
-
-        if (!text) { setStatus('Enter some plaintext.', false); return; }
-        if (!key) { setStatus('Enter a secret key.', false); return; }
-
-        // Generate sample data
-        const plainData = generateTensorFromText(text, key);
-        demoData.plaintext = text;
-        demoData.tensor0 = plainData.bytes;
-
-        // Display plaintext
-        document.getElementById('plaintext-display').textContent = `"${text}" (padded with ${plainData.padLen} bytes)`;
-
-        // Step 0: Plain text
-        renderTensor('tensorStep0', plainData.bytes);
-
-        // Step 1: Tensor Load (same as step 0 initially)
-        renderTensor('tensorStep1', plainData.bytes);
-
-        // Step 2: Simulate shifted tensor (visually shifted colors)
-        let shifted = [...plainData.bytes];
-        // Simulate layer rotation for demo
-        for (let layer = 0; layer < 4; layer++) {
-            let layerStart = layer * 16;
-            let shift = (layer + 1) % 4;
-            let layerData = shifted.slice(layerStart, layerStart + 16);
-            let rotated = [...layerData.slice(shift), ...layerData.slice(0, shift)];
-            for (let i = 0; i < 16; i++) {
-                shifted[layerStart + i] = rotated[i];
-            }
-        }
-        demoData.tensor2 = shifted;
-        renderTensor('tensorStep2', shifted, 'shifted');
-        document.getElementById('shift-values').textContent = 'Shifts applied: [1,2,3,0] (per layer)';
-
-        // Step 3: XOR with mask (simulated)
-        let xored = [...shifted];
-        // Simulate XOR with pseudo-random mask
-        for (let i = 0; i < 64; i++) {
-            let maskByte = Math.floor(Math.random() * 256);
-            xored[i] = xored[i] ^ maskByte;
-        }
-        demoData.tensor3 = xored;
-        renderTensor('tensorStep3', xored, 'xored');
-
-        // Step 4: Final cipher (Base64 encoded)
-        renderTensor('tensorStep4', xored, 'xored');
-        let b64 = btoa(String.fromCharCode(...xored));
-        demoData.base64Output = b64;
-        document.getElementById('base64-output').textContent = b64;
-
-        // Show demo section and scroll
-        showStep(0);
-        setStatus('Demo loaded! Click steps to navigate.', true);
-    });
-
-    // ── Step Navigation ─────────────────────────────────────────────────
-    function showStep(stepNum) {
-        document.querySelectorAll('.demo-section').forEach(s => s.classList.remove('active'));
-        document.getElementById(`step${stepNum}`).classList.add('active');
-
-        document.querySelectorAll('.demo-step-btn').forEach((btn, idx) => {
-            btn.classList.toggle('active', idx === stepNum);
-        });
-
-        document.querySelector(`[data-step="${stepNum}"]`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    document.querySelectorAll('.demo-step-btn').forEach((btn, idx) => {
-        btn.addEventListener('click', () => showStep(idx));
-    });
 
     // ── Character Count ─────────────────────────────────────────────────
     inputText.addEventListener('input', () => {
