@@ -71,7 +71,12 @@ public class CustomCipher {
     public byte[] decryptFromBase64(String base64Ciphertext, String key) {
         validateKey(key);
         if (base64Ciphertext == null || base64Ciphertext.isEmpty()) return new byte[0];
-        return decryptBytes(Base64.getDecoder().decode(base64Ciphertext), key);
+        try {
+            byte[] decoded = Base64.getDecoder().decode(base64Ciphertext);
+            return decryptBytes(decoded, key);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid Base64 input: " + e.getMessage());
+        }
     }
 
     // ── key derivation ───────────────────────────────────────────────────────
