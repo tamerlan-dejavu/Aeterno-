@@ -1,91 +1,116 @@
-# Custom Cipher Tool
+# Tensor-Cube Cipher Tool
 
-A symmetric encryption tool built with **Java 17 + Spring Boot 3** (backend) and **HTML + Tailwind CSS + Vanilla JS** (frontend). It implements a custom cipher based on **XOR + Circular Bit Shift** with positional whitening.
+A symmetric encryption tool built with **Java 17 + Spring Boot 3** (backend) and **HTML + Tailwind CSS + Vanilla JS** (frontend). 
 
-## Project structure
+It implements a **4×4×4 Tensor-Cube Cipher** with key derivation, circular layer shifts, and XOR masking.
+
+## Algorithm Overview
+
+**Tensor-Cube Cipher** is a block cipher operating on 64-byte (4×4×4) tensors:
+- **Key Derivation**: SHA-256 hash produces shift vectors (X/Y/Z axes) and PRNG seed
+- **Encryption per block**:
+  1. Load 64 bytes as 4×4×4 tensor (row-major)
+  2. Circular X-layer shift
+  3. Circular Y-layer shift
+  4. Circular Z-layer shift
+  5. XOR mask (PRNG-generated)
+  6. Store back
+- **Decryption**: Same steps in reverse order
+- **Padding**: PKCS#7 (64-byte blocks)
+- **Encoding**: Base64
+
+## Project Structure
 
 ```
 custom-cipher-tool/
-├── backend/           Spring Boot REST API
-│   ├── pom.xml
-│   └── src/main/java/com/cipher/
-│       ├── CipherApplication.java
-│       ├── controller/CipherController.java
-│       ├── service/CipherService.java
-│       ├── service/CustomCipherServiceImpl.java
-│       ├── algorithm/CustomCipher.java
-│       ├── model/CipherRequest.java
-│       ├── model/CipherResponse.java
-│       └── config/CorsConfig.java
-└── frontend/          Static UI (Vercel-ready)
-    ├── index.html
-    └── vercel.json
+├── pom.xml
+├── README.md
+├── frontend/
+│   ├── index.html        (Minimal GUI)
+│   └── vercel.json
+├── src/main/java/com/cipher/
+│   ├── CipherApplication.java
+│   ├── controller/
+│   │   └── CipherController.java
+│   ├── service/
+│   │   ├── CipherService.java
+│   │   └── CustomCipherServiceImpl.java
+│   ├── algorithm/
+│   │   ├── CustomCipher.java          (Main orchestrator)
+│   │   ├── KeyDeriver.java            (SHA-256 key derivation)
+│   │   ├── KeyMaterial.java           (Shift vectors + XOR mask)
+│   │   ├── TensorProcessor.java       (Load/store tensor, apply XOR)
+│   │   ├── LayerShifter.java          (X/Y/Z circular shifts)
+│   │   └── PaddingManager.java        (PKCS#7)
+│   ├── model/
+│   │   ├── CipherRequest.java
+│   │   └── CipherResponse.java
+│   └── config/
+│       └── CorsConfig.java
+└── src/main/resources/
+    └── application.properties
 ```
 
-## Running the backend
+## OOP Design
 
-Requirements: Java 17+, Maven 3.8+.
+The code is organized into **clear responsibility classes**:
+
+- **`KeyDeriver`** — Converts master key string → shift values + XOR mask
+- **`TensorProcessor`** — Handles I/O conversions, applies XOR mask
+- **`LayerShifter`** — Performs circular shifts on X, Y, Z axes
+- **`PaddingManager`** — PKCS#7 padding/unpadding
+- **`CustomCipher`** — Orchestrates all components into encrypt/decrypt flow
+- **`CustomCipherServiceImpl`** — Bridges cipher algorithm to REST endpoints
+- **`CipherController`** — HTTP API with error handling and logging
+
+## Installation & Running
+
+### Requirements
+- Java 17+
+- Maven 3.8+
+
+### Backend
 
 ```bash
-cd backend
+cd custom-cipher-tool
 mvn clean package
 mvn spring-boot:run
 ```
 
-The API will be available at `http://localhost:8080`.
+API available at `http://localhost:8080`
 
-### Endpoints
-- `POST /api/encrypt` &mdash; body `{ "text": "...", "key": "..." }` &rarr; `{ result, success, message }`
-- `POST /api/decrypt` &mdash; body `{ "text": "<base64>", "key": "..." }` &rarr; `{ result, success, message }`
-- `GET  /api/health`  &mdash; `{ "status": "UP" }`
+#### Endpoints
+- `POST /api/encrypt` — `{ "text": "plaintext", "key": "secret" }` → Base64 ciphertext
+- `POST /api/decrypt` — `{ "text": "base64-cipher", "key": "secret" }` → plaintext
+- `GET  /api/health`  — `{ "status": "UP" }`
 
-## Running the frontend
+### Frontend
 
-The simplest way: open `frontend/index.html` directly in your browser.
+Open `frontend/index.html` in a browser (or use `python -m http.server 5500`).
 
-If you prefer a tiny local server (avoids any browser quirks):
+Edit `API_BASE` in the HTML script block to point to your backend.
 
-```bash
-cd frontend
-python -m http.server 5500
-# then visit http://localhost:5500
-```
+## Features
 
-The frontend talks to `http://localhost:8080` by default. To point it at a deployed backend, edit the `API_BASE` constant at the top of the `<script>` block in `index.html`.
+✓ Symmetric encryption/decryption  
+✓ SHA-256 key derivation  
+✓ 4×4×4 tensor operations  
+✓ Circular layer shifting (invertible)  
+✓ PKCS#7 padding  
+✓ Base64 encoding  
+✓ File upload support  
+✓ Copy to clipboard  
+✓ REST API with proper error handling  
+✓ Minimal, responsive GUI  
 
-## Deployment
+## Implementation Requirements ✓
 
-### Frontend &mdash; Vercel
-1. Go to https://vercel.com/dashboard
-2. **Add New** → **Project**
-3. Import `tamerlan-dejavu/Aeterno-` repo
-4. In **Root Directory**, select `custom-cipher-tool/frontend`
-5. Leave Build Command and Output Directory empty
-6. Click **Deploy**
-7. Wait for completion → you get a public URL like `https://aeterno.vercel.app`
+- **Language**: Java (allowed per spec)
+- **Modular code**: Split into OOP classes by responsibility
+- **Readable & commented**: Each class has clear purpose and Javadoc
+- **Minimal GUI**: Single HTML page with Tailwind CSS, no bloat
 
-### Backend &mdash; Railway (recommended)
-1. Go to https://railway.app
-2. **New Project** → **Deploy from GitHub Repo**
-3. Select `tamerlan-dejavu/Aeterno-`
-4. **Root Directory:** `custom-cipher-tool/backend`
-5. Railway auto-detects Maven + builds via Docker
-6. Wait ~5 minutes for deployment
-7. Click the **Railway deployment** link to get your backend URL (e.g., `https://custom-cipher-tool-backend.railway.app`)
-8. Update `frontend/index.html` line 183-185 with your actual backend URL:
-   ```javascript
-   const API_BASE = 'https://your-railway-backend-url';
-   ```
-9. Commit & push → Vercel auto-rebuilds
+## Authors
 
-**Quick alternative:** Backend URL auto-detects based on hostname. If you name your Railway service `custom-cipher-tool-backend`, the frontend will find it automatically.
-
-## Algorithm summary
-
-For each plaintext byte at position `i`:
-1. `keyByte = key[i % key.length]`
-2. `shiftAmount = (keyByte % 7) + 1`  (1..7)
-3. `rotated = circularLeftShift(byte, shiftAmount)`
-4. `ciphertext[i] = rotated XOR keyByte XOR (i % 256)`
-
-Decryption mirrors this exactly. See `THEORY.md` for full analysis.
+Bauyrzhan Tamerlan  
+Derevyanchenko Kirill
