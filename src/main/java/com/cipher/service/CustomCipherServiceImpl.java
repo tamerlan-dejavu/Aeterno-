@@ -1,6 +1,6 @@
 package com.cipher.service;
 
-import com.cipher.algorithm.CustomCipher;
+import com.cipher.algorithm.TensorCipher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,10 +9,10 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class CustomCipherServiceImpl implements CipherService {
 
-    private final CustomCipher cipher;
+    private final TensorCipher cipher;
 
     @Autowired
-    public CustomCipherServiceImpl(CustomCipher cipher) {
+    public CustomCipherServiceImpl(TensorCipher cipher) {
         this.cipher = cipher;
     }
 
@@ -21,7 +21,8 @@ public class CustomCipherServiceImpl implements CipherService {
         if (plaintext == null) {
             plaintext = "";
         }
-        byte[] data = plaintext.getBytes(StandardCharsets.UTF_8);
+        // Normalize to uppercase before encryption (ASCII uppercase comes before lowercase)
+        byte[] data = plaintext.toUpperCase().getBytes(StandardCharsets.UTF_8);
         return cipher.encryptToBase64(data, key);
     }
 
