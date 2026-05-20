@@ -52,7 +52,6 @@
 
     <build>
         <sourceDirectory>src</sourceDirectory>
-        <testSourceDirectory>src/test</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
