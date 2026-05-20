@@ -9,14 +9,12 @@ public class TensorCipher {
     private final TensorProcessor tensorProcessor;
     private final LayerShifter layerShifter;
     private final PaddingManager paddingManager;
-    private final SBoxSubstitution sbox;
 
     public TensorCipher() {
         this.keyDeriver = new KeyDeriver();
         this.tensorProcessor = new TensorProcessor();
         this.layerShifter = new LayerShifter();
         this.paddingManager = new PaddingManager();
-        this.sbox = new SBoxSubstitution();
     }
 
     public byte[] encryptBytes(byte[] plaintext, String key) {
@@ -29,18 +27,16 @@ public class TensorCipher {
         for (int block = 0; block < padded.length / blockSize; block++) {
             byte[][][] tensor = tensorProcessor.loadTensor(padded, block * blockSize);
 
-            // First stage: 3 shifts + S-box
+            // First stage: X -> Y -> Z shifts
             layerShifter.shiftX(tensor, km.getShiftX(), false);
             layerShifter.shiftY(tensor, km.getShiftY(), false);
             layerShifter.shiftZ(tensor, km.getShiftZ(), false);
-            sbox.applySBox(tensor);
             tensorProcessor.applyXorMask(tensor, km.getMask());
 
-            // Second stage: 3 shifts + S-box (for avalanche effect)
-            layerShifter.shiftX(tensor, km.getShiftX(), false);
-            layerShifter.shiftY(tensor, km.getShiftY(), false);
+            // Second stage: Z -> Y -> X shifts (for avalanche effect)
             layerShifter.shiftZ(tensor, km.getShiftZ(), false);
-            sbox.applySBox(tensor);
+            layerShifter.shiftY(tensor, km.getShiftY(), false);
+            layerShifter.shiftX(tensor, km.getShiftX(), false);
             tensorProcessor.applyXorMask(tensor, km.getMask());
 
             tensorProcessor.storeTensor(tensor, out, block * blockSize);
@@ -65,16 +61,14 @@ public class TensorCipher {
         for (int block = 0; block < ciphertext.length / blockSize; block++) {
             byte[][][] tensor = tensorProcessor.loadTensor(ciphertext, block * blockSize);
 
-            // Reverse second stage: XOR mask + inverse S-box + 3 inverse shifts
+            // Reverse second stage: XOR mask + inverse Z -> Y -> X shifts
             tensorProcessor.applyXorMask(tensor, km.getMask());
-            sbox.applySBox(tensor);
-            layerShifter.shiftZ(tensor, km.getShiftZ(), true);
-            layerShifter.shiftY(tensor, km.getShiftY(), true);
             layerShifter.shiftX(tensor, km.getShiftX(), true);
+            layerShifter.shiftY(tensor, km.getShiftY(), true);
+            layerShifter.shiftZ(tensor, km.getShiftZ(), true);
 
-            // Reverse first stage: XOR mask + inverse S-box + 3 inverse shifts
+            // Reverse first stage: XOR mask + inverse X -> Y -> Z shifts
             tensorProcessor.applyXorMask(tensor, km.getMask());
-            sbox.applySBox(tensor);
             layerShifter.shiftZ(tensor, km.getShiftZ(), true);
             layerShifter.shiftY(tensor, km.getShiftY(), true);
             layerShifter.shiftX(tensor, km.getShiftX(), true);
