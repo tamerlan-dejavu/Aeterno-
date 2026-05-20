@@ -1,53 +1,20 @@
 package com.cipher.algorithm;
 
-/**
- * Performs circular layer shifts on tensor axes (X, Y, Z).
- * Each shift operation circularly shifts a 16-element plane (4×4 flat array).
- */
 public class LayerShifter {
     private static final int DIM = 4;
 
-    /**
-     * X-axis shift: for each x, circularly shift the flat Y×Z plane.
-     * Plane is read in row-major order: plane[y*DIM + z]
-     */
+    private enum Axis { X, Y, Z }
+
     public void shiftX(byte[][][] tensor, int[] shifts, boolean inverse) {
-        for (int x = 0; x < DIM; x++) {
-            int s = calculateShift(shifts[x], inverse);
-            if (s == 0) continue;
-
-            byte[] plane = extractXPlane(tensor, x);
-            plane = circularShift(plane, s);
-            restoreXPlane(tensor, x, plane);
-        }
+        shiftAxis(tensor, shifts, inverse, Axis.X);
     }
 
-    /**
-     * Y-axis shift: for each y, circularly shift the flat X×Z plane.
-     */
     public void shiftY(byte[][][] tensor, int[] shifts, boolean inverse) {
-        for (int y = 0; y < DIM; y++) {
-            int s = calculateShift(shifts[y], inverse);
-            if (s == 0) continue;
-
-            byte[] plane = extractYPlane(tensor, y);
-            plane = circularShift(plane, s);
-            restoreYPlane(tensor, y, plane);
-        }
+        shiftAxis(tensor, shifts, inverse, Axis.Y);
     }
 
-    /**
-     * Z-axis shift: for each z, circularly shift the flat X×Y plane.
-     */
     public void shiftZ(byte[][][] tensor, int[] shifts, boolean inverse) {
-        for (int z = 0; z < DIM; z++) {
-            int s = calculateShift(shifts[z], inverse);
-            if (s == 0) continue;
-
-            byte[] plane = extractZPlane(tensor, z);
-            plane = circularShift(plane, s);
-            restoreZPlane(tensor, z, plane);
-        }
+        shiftAxis(tensor, shifts, inverse, Axis.Z);
     }
 
     private int calculateShift(int shiftValue, boolean inverse) {
@@ -57,63 +24,71 @@ public class LayerShifter {
         return shiftValue % (DIM * DIM);
     }
 
-    private byte[] extractXPlane(byte[][][] tensor, int x) {
+    private void shiftAxis(byte[][][] tensor, int[] shifts, boolean inverse, Axis axis) {
+        for (int i = 0; i < DIM; i++) {
+            int s = calculateShift(shifts[i], inverse);
+            if (s == 0) continue;
+
+            byte[] plane = extractPlane(tensor, i, axis);
+            plane = circularShift(plane, s);
+            restorePlane(tensor, i, plane, axis);
+        }
+    }
+
+    private byte[] extractPlane(byte[][][] tensor, int idx, Axis axis) {
         byte[] plane = new byte[DIM * DIM];
-        for (int y = 0; y < DIM; y++) {
-            for (int z = 0; z < DIM; z++) {
-                plane[y * DIM + z] = tensor[x][y][z];
-            }
+        switch (axis) {
+            case X:
+                for (int y = 0; y < DIM; y++) {
+                    for (int z = 0; z < DIM; z++) {
+                        plane[y * DIM + z] = tensor[idx][y][z];
+                    }
+                }
+                break;
+            case Y:
+                for (int x = 0; x < DIM; x++) {
+                    for (int z = 0; z < DIM; z++) {
+                        plane[x * DIM + z] = tensor[x][idx][z];
+                    }
+                }
+                break;
+            case Z:
+                for (int x = 0; x < DIM; x++) {
+                    for (int y = 0; y < DIM; y++) {
+                        plane[x * DIM + y] = tensor[x][y][idx];
+                    }
+                }
+                break;
         }
         return plane;
     }
 
-    private void restoreXPlane(byte[][][] tensor, int x, byte[] plane) {
-        for (int y = 0; y < DIM; y++) {
-            for (int z = 0; z < DIM; z++) {
-                tensor[x][y][z] = plane[y * DIM + z];
-            }
+    private void restorePlane(byte[][][] tensor, int idx, byte[] plane, Axis axis) {
+        switch (axis) {
+            case X:
+                for (int y = 0; y < DIM; y++) {
+                    for (int z = 0; z < DIM; z++) {
+                        tensor[idx][y][z] = plane[y * DIM + z];
+                    }
+                }
+                break;
+            case Y:
+                for (int x = 0; x < DIM; x++) {
+                    for (int z = 0; z < DIM; z++) {
+                        tensor[x][idx][z] = plane[x * DIM + z];
+                    }
+                }
+                break;
+            case Z:
+                for (int x = 0; x < DIM; x++) {
+                    for (int y = 0; y < DIM; y++) {
+                        tensor[x][y][idx] = plane[x * DIM + y];
+                    }
+                }
+                break;
         }
     }
 
-    private byte[] extractYPlane(byte[][][] tensor, int y) {
-        byte[] plane = new byte[DIM * DIM];
-        for (int x = 0; x < DIM; x++) {
-            for (int z = 0; z < DIM; z++) {
-                plane[x * DIM + z] = tensor[x][y][z];
-            }
-        }
-        return plane;
-    }
-
-    private void restoreYPlane(byte[][][] tensor, int y, byte[] plane) {
-        for (int x = 0; x < DIM; x++) {
-            for (int z = 0; z < DIM; z++) {
-                tensor[x][y][z] = plane[x * DIM + z];
-            }
-        }
-    }
-
-    private byte[] extractZPlane(byte[][][] tensor, int z) {
-        byte[] plane = new byte[DIM * DIM];
-        for (int x = 0; x < DIM; x++) {
-            for (int y = 0; y < DIM; y++) {
-                plane[x * DIM + y] = tensor[x][y][z];
-            }
-        }
-        return plane;
-    }
-
-    private void restoreZPlane(byte[][][] tensor, int z, byte[] plane) {
-        for (int x = 0; x < DIM; x++) {
-            for (int y = 0; y < DIM; y++) {
-                tensor[x][y][z] = plane[x * DIM + y];
-            }
-        }
-    }
-
-    /**
-     * Circular left shift of byte array by s positions.
-     */
     private byte[] circularShift(byte[] arr, int s) {
         int len = arr.length;
         s = ((s % len) + len) % len;

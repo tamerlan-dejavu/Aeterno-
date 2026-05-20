@@ -1,9 +1,5 @@
 package com.cipher.algorithm;
 
-/**
- * Holds derived key material from a master key.
- * Contains: shift values for X/Y/Z axes and XOR mask.
- */
 public class KeyMaterial {
     private static final int DIM = 4;
     private static final int BLOCK = 64;
