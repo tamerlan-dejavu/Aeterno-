@@ -3,6 +3,7 @@ package com.cipher.algorithm;
 import org.springframework.stereotype.Component;
 import java.util.Base64;
 
+@Component
 public class TensorCipher {
 
     private final KeyDeriver keyDeriver;

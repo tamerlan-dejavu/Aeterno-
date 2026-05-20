@@ -41,45 +41,71 @@ public class TensorProcessor {
     }
 
     public void applyMixing(byte[][][] tensor) {
-        byte[][][] temp = new byte[DIM][DIM][DIM];
-        for (int x = 0; x < DIM; x++) {
-            for (int y = 0; y < DIM; y++) {
-                for (int z = 0; z < DIM; z++) {
-                    temp[x][y][z] = tensor[x][y][z];
-                }
+        // Process X-axis: XOR each layer with next (in pairs: 0^1, 2^3)
+        for (int y = 0; y < DIM; y++) {
+            for (int z = 0; z < DIM; z++) {
+                byte mix = (byte) (tensor[0][y][z] ^ tensor[1][y][z]);
+                tensor[0][y][z] ^= mix;
+                tensor[1][y][z] ^= mix;
+                mix = (byte) (tensor[2][y][z] ^ tensor[3][y][z]);
+                tensor[2][y][z] ^= mix;
+                tensor[3][y][z] ^= mix;
             }
         }
+        // Process Y-axis
+        for (int x = 0; x < DIM; x++) {
+            for (int z = 0; z < DIM; z++) {
+                byte mix = (byte) (tensor[x][0][z] ^ tensor[x][1][z]);
+                tensor[x][0][z] ^= mix;
+                tensor[x][1][z] ^= mix;
+                mix = (byte) (tensor[x][2][z] ^ tensor[x][3][z]);
+                tensor[x][2][z] ^= mix;
+                tensor[x][3][z] ^= mix;
+            }
+        }
+        // Process Z-axis
         for (int x = 0; x < DIM; x++) {
             for (int y = 0; y < DIM; y++) {
-                for (int z = 0; z < DIM; z++) {
-                    byte val = temp[x][y][z];
-                    val ^= temp[(x + 1) % DIM][y][z];
-                    val ^= temp[x][(y + 1) % DIM][z];
-                    val ^= temp[x][y][(z + 1) % DIM];
-                    tensor[x][y][z] = val;
-                }
+                byte mix = (byte) (tensor[x][y][0] ^ tensor[x][y][1]);
+                tensor[x][y][0] ^= mix;
+                tensor[x][y][1] ^= mix;
+                mix = (byte) (tensor[x][y][2] ^ tensor[x][y][3]);
+                tensor[x][y][2] ^= mix;
+                tensor[x][y][3] ^= mix;
             }
         }
     }
 
     public void applyInverseMixing(byte[][][] tensor) {
-        byte[][][] temp = new byte[DIM][DIM][DIM];
+        // Exact inverse: reverse order of axis processing
         for (int x = 0; x < DIM; x++) {
             for (int y = 0; y < DIM; y++) {
-                for (int z = 0; z < DIM; z++) {
-                    temp[x][y][z] = tensor[x][y][z];
-                }
+                byte mix = (byte) (tensor[x][y][2] ^ tensor[x][y][3]);
+                tensor[x][y][2] ^= mix;
+                tensor[x][y][3] ^= mix;
+                mix = (byte) (tensor[x][y][0] ^ tensor[x][y][1]);
+                tensor[x][y][0] ^= mix;
+                tensor[x][y][1] ^= mix;
             }
         }
         for (int x = 0; x < DIM; x++) {
-            for (int y = 0; y < DIM; y++) {
-                for (int z = 0; z < DIM; z++) {
-                    byte val = temp[x][y][z];
-                    val ^= temp[(x - 1 + DIM) % DIM][y][z];
-                    val ^= temp[x][(y - 1 + DIM) % DIM][z];
-                    val ^= temp[x][y][(z - 1 + DIM) % DIM];
-                    tensor[x][y][z] = val;
-                }
+            for (int z = 0; z < DIM; z++) {
+                byte mix = (byte) (tensor[x][2][z] ^ tensor[x][3][z]);
+                tensor[x][2][z] ^= mix;
+                tensor[x][3][z] ^= mix;
+                mix = (byte) (tensor[x][0][z] ^ tensor[x][1][z]);
+                tensor[x][0][z] ^= mix;
+                tensor[x][1][z] ^= mix;
+            }
+        }
+        for (int y = 0; y < DIM; y++) {
+            for (int z = 0; z < DIM; z++) {
+                byte mix = (byte) (tensor[2][y][z] ^ tensor[3][y][z]);
+                tensor[2][y][z] ^= mix;
+                tensor[3][y][z] ^= mix;
+                mix = (byte) (tensor[0][y][z] ^ tensor[1][y][z]);
+                tensor[0][y][z] ^= mix;
+                tensor[1][y][z] ^= mix;
             }
         }
     }
