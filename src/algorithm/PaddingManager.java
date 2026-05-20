@@ -1,4 +1,4 @@
-package com.cipher.algorithm;
+package algorithm;
 
 import java.util.Arrays;
 

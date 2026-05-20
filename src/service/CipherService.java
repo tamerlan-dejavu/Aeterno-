@@ -1,4 +1,4 @@
-package com.cipher.service;
+package service;
 
 public interface CipherService {
 

@@ -1,4 +1,4 @@
-package com.cipher.model;
+package model;
 
 public class CipherRequest {
     private String text;

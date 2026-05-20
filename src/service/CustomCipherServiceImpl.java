@@ -1,6 +1,6 @@
-package com.cipher.service;
+package service;
 
-import com.cipher.algorithm.TensorCipher;
+import algorithm.TensorCipher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

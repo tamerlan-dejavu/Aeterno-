@@ -1,4 +1,4 @@
-package com.cipher.algorithm;
+package config;
 
 public class TensorProcessor {
     private static final int DIM = 4;

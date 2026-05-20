@@ -1,7 +1,6 @@
-package com.cipher.algorithm;
+package algorithm;
 
 import org.junit.jupiter.api.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
@@ -42,7 +41,7 @@ class TensorCipherTest {
         String key = "TEST_KEY";
         byte[] pt1 = "AAAAAAAAAAAAAAAA".getBytes(StandardCharsets.UTF_8);
         byte[] pt2 = pt1.clone();
-        pt2[pt2.length - 1] ^= 0x01; // flip one bit
+        pt2[pt2.length - 1] ^= 0x01;
 
         byte[] c1 = cipher.encryptBytes(pt1, key);
         byte[] c2 = cipher.encryptBytes(pt2, key);
@@ -57,7 +56,7 @@ class TensorCipherTest {
     void avalanche_keySingleBitFlip() {
         byte[] pt = "AAAAAAAAAAAAAAAA".getBytes(StandardCharsets.UTF_8);
         String k1 = "TESTKEY1";
-        String k2 = "TESTKEY2"; // differs in low bits of last byte
+        String k2 = "TESTKEY2";
 
         byte[] c1 = cipher.encryptBytes(pt, k1);
         byte[] c2 = cipher.encryptBytes(pt, k2);

@@ -1,4 +1,4 @@
-package com.cipher.algorithm;
+package algorithm;
 
 public class KeyMaterial {
     private static final int DIM = 4;

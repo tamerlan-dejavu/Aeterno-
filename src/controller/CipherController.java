@@ -1,8 +1,8 @@
-package com.cipher.controller;
+package controller;
 
-import com.cipher.model.CipherRequest;
-import com.cipher.model.CipherResponse;
-import com.cipher.service.CipherService;
+import model.CipherRequest;
+import model.CipherResponse;
+import service.CipherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

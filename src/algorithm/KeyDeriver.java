@@ -1,4 +1,4 @@
-package com.cipher.algorithm;
+package algorithm;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
