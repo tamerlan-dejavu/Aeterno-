@@ -5,22 +5,18 @@ public class AvalancheTest {
         TensorCipher cipher = new TensorCipher();
         String key = "test-key-12345";
 
-        // Исходный текст (64 байта = 1 блок)
         byte[] plaintext = new byte[64];
         for (int i = 0; i < 64; i++) {
             plaintext[i] = (byte) i;
         }
 
-        // Зашифруем оригинал
         byte[] ciphertext1 = cipher.encryptBytes(plaintext, key);
 
-        // Измените 1 бит в позиции 0
         byte[] plaintext2 = plaintext.clone();
-        plaintext2[0] ^= 0x01;  // Измени первый бит первого байта
+        plaintext2[0] ^= 0x01;
 
         byte[] ciphertext2 = cipher.encryptBytes(plaintext2, key);
 
-        // Подсчитаем различия в битах
         int bitDifferences = 0;
         for (int i = 0; i < ciphertext1.length; i++) {
             byte xor = (byte) (ciphertext1[i] ^ ciphertext2[i]);
@@ -30,12 +26,16 @@ public class AvalancheTest {
         int totalBits = ciphertext1.length * 8;
         double percentage = (bitDifferences * 100.0) / totalBits;
 
-        System.out.println("=== ТЕСТ ЛАВИННОГО ЭФФЕКТА ===");
-        System.out.println("Изменили: 1 бит в исходном тексте");
-        System.out.println("Различий в битах: " + bitDifferences + " из " + totalBits);
-        System.out.println("Процент: " + String.format("%.2f%%", percentage));
+        System.out.println("=== AVALANCHE EFFECT TEST ===");
+        System.out.println("Changed: 1 bit in plaintext");
+        System.out.println("Bit differences: " + bitDifferences + " out of " + totalBits);
+        System.out.println("Percentage: " + String.format("%.2f%%", percentage));
         System.out.println();
-        System.out.println("Ожидается для хорошего шифра: ~50%");
-        System.out.println("Сейчас: " + (percentage >= 40 && percentage <= 60 ? "✓ ХОРОШО" : "✗ СЛАБО"));
+        System.out.println("Expected for good cipher: 40-60%");
+        System.out.println("Current: " + (percentage >= 40 && percentage <= 60 ? "✓ GOOD" : "✗ WEAK"));
+
+        byte[] decrypted = cipher.decryptBytes(ciphertext1, key);
+        boolean matches = java.util.Arrays.equals(plaintext, decrypted);
+        System.out.println("Decryption test: " + (matches ? "✓ PASS" : "✗ FAIL"));
     }
 }
