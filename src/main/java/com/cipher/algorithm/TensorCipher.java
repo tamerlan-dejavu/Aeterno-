@@ -28,15 +28,13 @@ public class TensorCipher {
             byte[][][] tensor = tensorProcessor.loadTensor(padded, block * blockSize);
 
             for (int round = 0; round < km.getRounds(); round++) {
-                if (round % 2 == 0) {
-                    layerShifter.shiftX(tensor, km.getShiftX(round), false);
-                    layerShifter.shiftY(tensor, km.getShiftY(round), false);
-                    layerShifter.shiftZ(tensor, km.getShiftZ(round), false);
-                } else {
-                    layerShifter.shiftZ(tensor, km.getShiftZ(round), false);
-                    layerShifter.shiftY(tensor, km.getShiftY(round), false);
-                    layerShifter.shiftX(tensor, km.getShiftX(round), false);
-                }
+                layerShifter.shiftX(tensor, km.getShiftX(round), false);
+                layerShifter.shiftY(tensor, km.getShiftY(round), false);
+                layerShifter.shiftZ(tensor, km.getShiftZ(round), false);
+
+                layerShifter.shiftZ(tensor, km.getShiftX(round), false);
+                layerShifter.shiftY(tensor, km.getShiftY(round), false);
+                layerShifter.shiftX(tensor, km.getShiftZ(round), false);
 
                 tensorProcessor.applyXorMask(tensor, km.getMask(round));
                 tensorProcessor.applyMixing(tensor);
@@ -68,15 +66,13 @@ public class TensorCipher {
                 tensorProcessor.applyInverseMixing(tensor);
                 tensorProcessor.applyXorMask(tensor, km.getMask(round));
 
-                if (round % 2 == 0) {
-                    layerShifter.shiftZ(tensor, km.getShiftZ(round), true);
-                    layerShifter.shiftY(tensor, km.getShiftY(round), true);
-                    layerShifter.shiftX(tensor, km.getShiftX(round), true);
-                } else {
-                    layerShifter.shiftX(tensor, km.getShiftX(round), true);
-                    layerShifter.shiftY(tensor, km.getShiftY(round), true);
-                    layerShifter.shiftZ(tensor, km.getShiftZ(round), true);
-                }
+                layerShifter.shiftX(tensor, km.getShiftZ(round), true);
+                layerShifter.shiftY(tensor, km.getShiftY(round), true);
+                layerShifter.shiftZ(tensor, km.getShiftX(round), true);
+
+                layerShifter.shiftZ(tensor, km.getShiftZ(round), true);
+                layerShifter.shiftY(tensor, km.getShiftY(round), true);
+                layerShifter.shiftX(tensor, km.getShiftX(round), true);
             }
 
             tensorProcessor.storeTensor(tensor, out, block * blockSize);
