@@ -29,20 +29,4 @@ public class KeyMaterial {
     public int getRounds() {
         return ROUNDS;
     }
-
-    public int[] getShiftX() {
-        return roundShiftX[0];
-    }
-
-    public int[] getShiftY() {
-        return roundShiftY[0];
-    }
-
-    public int[] getShiftZ() {
-        return roundShiftZ[0];
-    }
-
-    public byte[] getMask() {
-        return roundMask[0];
-    }
 }

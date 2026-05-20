@@ -39,9 +39,9 @@ public class KeyDeriver {
 
     private void deriveRoundKeys(KeyMaterial km, byte[] roundHash, int round) {
         for (int i = 0; i < DIM; i++) {
-            km.getShiftX(round)[i] = 1 + (roundHash[i] & 0x0B);
-            km.getShiftY(round)[i] = 1 + (roundHash[i + 4] & 0x0B);
-            km.getShiftZ(round)[i] = 1 + (roundHash[i + 8] & 0x0B);
+            km.getShiftX(round)[i] = 1 + (roundHash[i] & 0x0F);
+            km.getShiftY(round)[i] = 1 + (roundHash[i + 4] & 0x0F);
+            km.getShiftZ(round)[i] = 1 + (roundHash[i + 8] & 0x0F);
         }
 
         long seed = 0;
