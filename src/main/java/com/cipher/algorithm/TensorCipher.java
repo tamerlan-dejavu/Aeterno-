@@ -65,7 +65,7 @@ public class TensorCipher {
             byte[][][] tensor = tensorProcessor.loadTensor(ciphertext, block * blockSize);
 
             for (int round = km.getRounds() - 1; round >= 0; round--) {
-                tensorProcessor.applyMixing(tensor);
+                tensorProcessor.applyInverseMixing(tensor);
                 tensorProcessor.applyXorMask(tensor, km.getMask(round));
 
                 if (round % 2 == 0) {

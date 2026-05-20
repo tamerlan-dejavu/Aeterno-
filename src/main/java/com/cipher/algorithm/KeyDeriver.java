@@ -15,21 +15,21 @@ public class KeyDeriver {
             throw new IllegalArgumentException("Key must not be empty");
         }
 
-        byte[] hash = sha256(masterKey.getBytes(StandardCharsets.UTF_8));
+        byte[] masterHash = sha256(masterKey.getBytes(StandardCharsets.UTF_8));
         KeyMaterial km = new KeyMaterial();
 
         for (int round = 0; round < ROUNDS; round++) {
-            byte[] roundHash = deriveRoundHash(hash, round);
+            byte[] roundHash = deriveRoundHash(masterHash, round);
             deriveRoundKeys(km, roundHash, round);
         }
 
         return km;
     }
 
-    private byte[] deriveRoundHash(byte[] baseHash, int round) {
+    private byte[] deriveRoundHash(byte[] masterHash, int round) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(baseHash);
+            md.update(masterHash);
             md.update((byte) round);
             return md.digest();
         } catch (NoSuchAlgorithmException e) {
@@ -39,9 +39,9 @@ public class KeyDeriver {
 
     private void deriveRoundKeys(KeyMaterial km, byte[] roundHash, int round) {
         for (int i = 0; i < DIM; i++) {
-            km.getShiftX(round)[i] = ((roundHash[i] & 0xFF) % 12) + 1;
-            km.getShiftY(round)[i] = ((roundHash[i + 4] & 0xFF) % 12) + 1;
-            km.getShiftZ(round)[i] = ((roundHash[i + 8] & 0xFF) % 12) + 1;
+            km.getShiftX(round)[i] = 1 + (roundHash[i] & 0x0B);
+            km.getShiftY(round)[i] = 1 + (roundHash[i + 4] & 0x0B);
+            km.getShiftZ(round)[i] = 1 + (roundHash[i + 8] & 0x0B);
         }
 
         long seed = 0;
