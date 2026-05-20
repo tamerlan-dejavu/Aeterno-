@@ -27,17 +27,20 @@ public class TensorCipher {
         for (int block = 0; block < padded.length / blockSize; block++) {
             byte[][][] tensor = tensorProcessor.loadTensor(padded, block * blockSize);
 
-            // First stage: X -> Y -> Z shifts
-            layerShifter.shiftX(tensor, km.getShiftX(), false);
-            layerShifter.shiftY(tensor, km.getShiftY(), false);
-            layerShifter.shiftZ(tensor, km.getShiftZ(), false);
-            tensorProcessor.applyXorMask(tensor, km.getMask());
+            for (int round = 0; round < km.getRounds(); round++) {
+                if (round % 2 == 0) {
+                    layerShifter.shiftX(tensor, km.getShiftX(round), false);
+                    layerShifter.shiftY(tensor, km.getShiftY(round), false);
+                    layerShifter.shiftZ(tensor, km.getShiftZ(round), false);
+                } else {
+                    layerShifter.shiftZ(tensor, km.getShiftZ(round), false);
+                    layerShifter.shiftY(tensor, km.getShiftY(round), false);
+                    layerShifter.shiftX(tensor, km.getShiftX(round), false);
+                }
 
-            // Second stage: Z -> Y -> X shifts (for avalanche effect)
-            layerShifter.shiftZ(tensor, km.getShiftZ(), false);
-            layerShifter.shiftY(tensor, km.getShiftY(), false);
-            layerShifter.shiftX(tensor, km.getShiftX(), false);
-            tensorProcessor.applyXorMask(tensor, km.getMask());
+                tensorProcessor.applyXorMask(tensor, km.getMask(round));
+                tensorProcessor.applyMixing(tensor);
+            }
 
             tensorProcessor.storeTensor(tensor, out, block * blockSize);
         }
@@ -61,17 +64,20 @@ public class TensorCipher {
         for (int block = 0; block < ciphertext.length / blockSize; block++) {
             byte[][][] tensor = tensorProcessor.loadTensor(ciphertext, block * blockSize);
 
-            // Reverse second stage: XOR mask + inverse Z -> Y -> X shifts
-            tensorProcessor.applyXorMask(tensor, km.getMask());
-            layerShifter.shiftX(tensor, km.getShiftX(), true);
-            layerShifter.shiftY(tensor, km.getShiftY(), true);
-            layerShifter.shiftZ(tensor, km.getShiftZ(), true);
+            for (int round = km.getRounds() - 1; round >= 0; round--) {
+                tensorProcessor.applyMixing(tensor);
+                tensorProcessor.applyXorMask(tensor, km.getMask(round));
 
-            // Reverse first stage: XOR mask + inverse X -> Y -> Z shifts
-            tensorProcessor.applyXorMask(tensor, km.getMask());
-            layerShifter.shiftZ(tensor, km.getShiftZ(), true);
-            layerShifter.shiftY(tensor, km.getShiftY(), true);
-            layerShifter.shiftX(tensor, km.getShiftX(), true);
+                if (round % 2 == 0) {
+                    layerShifter.shiftZ(tensor, km.getShiftZ(round), true);
+                    layerShifter.shiftY(tensor, km.getShiftY(round), true);
+                    layerShifter.shiftX(tensor, km.getShiftX(round), true);
+                } else {
+                    layerShifter.shiftX(tensor, km.getShiftX(round), true);
+                    layerShifter.shiftY(tensor, km.getShiftY(round), true);
+                    layerShifter.shiftZ(tensor, km.getShiftZ(round), true);
+                }
+            }
 
             tensorProcessor.storeTensor(tensor, out, block * blockSize);
         }

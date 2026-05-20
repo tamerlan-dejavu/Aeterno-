@@ -18,10 +18,12 @@ public class LayerShifter {
     }
 
     private int calculateShift(int shiftValue, boolean inverse) {
+        int planeSize = DIM * DIM;
+        int normalizedShift = ((shiftValue % planeSize) + planeSize) % planeSize;
         if (inverse) {
-            return (DIM * DIM - shiftValue % (DIM * DIM)) % (DIM * DIM);
+            return (planeSize - normalizedShift) % planeSize;
         }
-        return shiftValue % (DIM * DIM);
+        return normalizedShift;
     }
 
     private void shiftAxis(byte[][][] tensor, int[] shifts, boolean inverse, Axis axis) {

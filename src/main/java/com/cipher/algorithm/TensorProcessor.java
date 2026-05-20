@@ -40,6 +40,28 @@ public class TensorProcessor {
         }
     }
 
+    public void applyMixing(byte[][][] tensor) {
+        byte[][][] temp = new byte[DIM][DIM][DIM];
+        for (int x = 0; x < DIM; x++) {
+            for (int y = 0; y < DIM; y++) {
+                for (int z = 0; z < DIM; z++) {
+                    byte val = tensor[x][y][z];
+                    val ^= tensor[(x + 1) % DIM][y][z];
+                    val ^= tensor[x][(y + 1) % DIM][z];
+                    val ^= tensor[x][y][(z + 1) % DIM];
+                    temp[x][y][z] = val;
+                }
+            }
+        }
+        for (int x = 0; x < DIM; x++) {
+            for (int y = 0; y < DIM; y++) {
+                for (int z = 0; z < DIM; z++) {
+                    tensor[x][y][z] = temp[x][y][z];
+                }
+            }
+        }
+    }
+
     public int getDimension() {
         return DIM;
     }
